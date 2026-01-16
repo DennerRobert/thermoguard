@@ -55,7 +55,7 @@ export const HumidityCard = () => {
                 fill="url(#waterGradient)"
                 className="transition-all duration-700 ease-out"
               />
-              
+
               {/* Wave effect */}
               <ellipse
                 cx="50"

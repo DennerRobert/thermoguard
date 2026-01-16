@@ -56,7 +56,7 @@ export const TemperatureHistoryChart = () => {
   // Initialize history data on client side only
   useEffect(() => {
     setIsClient(true);
-    
+
     if (temperatureHistory.length === 0) {
       const now = new Date();
       for (let i = 29; i >= 0; i--) {
@@ -90,7 +90,7 @@ export const TemperatureHistoryChart = () => {
 
   if (!isClient) {
     return (
-      <div className="card p-6 h-full">
+      <div className="card p-6">
         <div className="flex items-center gap-2 mb-4">
           <Activity size={18} className="text-cyan-400" />
           <span className="font-semibold text-[#f0f6fc]">Histórico de Temperatura</span>
@@ -103,14 +103,14 @@ export const TemperatureHistoryChart = () => {
   }
 
   return (
-    <div className="card p-6 h-full">
+    <div className="card p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Activity size={18} className="text-cyan-400" />
           <span className="font-semibold text-[#f0f6fc]">Histórico de Temperatura</span>
         </div>
-        
+
         {/* Legend */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export const TemperatureHistoryChart = () => {
       </div>
 
       {/* Chart */}
-      <div className="h-[200px] mt-4">
+      <div className="h-[150px] mt-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={temperatureHistory}

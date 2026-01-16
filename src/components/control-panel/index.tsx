@@ -59,11 +59,10 @@ export const ControlPanel = () => {
         {/* Ligar Ar */}
         <button
           onClick={() => handleButtonClick("on", handleTurnOn)}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
-            activeButton === "on"
-              ? "bg-green-500/20 border-green-500/50 scale-95"
-              : "bg-[#161b22] border-[#21262d] hover:border-green-500/30 hover:bg-green-500/5"
-          }`}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${activeButton === "on"
+            ? "bg-green-500/20 border-green-500/50 scale-95"
+            : "bg-[#161b22] border-[#21262d] hover:border-green-500/30 hover:bg-green-500/5"
+            }`}
         >
           <Power size={24} className="text-green-400" />
           <span className="text-xs font-medium text-green-400">Ligar Ar</span>
@@ -72,11 +71,10 @@ export const ControlPanel = () => {
         {/* Desligar Ar */}
         <button
           onClick={() => handleButtonClick("off", handleTurnOff)}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
-            activeButton === "off"
-              ? "bg-red-500/20 border-red-500/50 scale-95"
-              : "bg-[#161b22] border-[#21262d] hover:border-red-500/30 hover:bg-red-500/5"
-          }`}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${activeButton === "off"
+            ? "bg-red-500/20 border-red-500/50 scale-95"
+            : "bg-[#161b22] border-[#21262d] hover:border-red-500/30 hover:bg-red-500/5"
+            }`}
         >
           <PowerOff size={24} className="text-red-400" />
           <span className="text-xs font-medium text-red-400">Desligar Ar</span>
@@ -85,11 +83,10 @@ export const ControlPanel = () => {
         {/* Modo Automático */}
         <button
           onClick={() => handleButtonClick("auto", handleAutoMode)}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
-            mode === "automatic"
-              ? "bg-cyan-500/20 border-cyan-500/50"
-              : "bg-[#161b22] border-[#21262d] hover:border-cyan-500/30 hover:bg-cyan-500/5"
-          } ${activeButton === "auto" ? "scale-95" : ""}`}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${mode === "automatic"
+            ? "bg-cyan-500/20 border-cyan-500/50"
+            : "bg-[#161b22] border-[#21262d] hover:border-cyan-500/30 hover:bg-cyan-500/5"
+            } ${activeButton === "auto" ? "scale-95" : ""}`}
         >
           <Settings2 size={24} className="text-cyan-400" />
           <span className="text-xs font-medium text-cyan-400">
@@ -101,11 +98,10 @@ export const ControlPanel = () => {
         <button
           onClick={() => handleButtonClick("ir", handleRecordIR)}
           disabled={isRecording}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
-            isRecording
-              ? "bg-orange-500/20 border-orange-500/50"
-              : "bg-[#161b22] border-[#21262d] hover:border-orange-500/30 hover:bg-orange-500/5"
-          } ${activeButton === "ir" ? "scale-95" : ""}`}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${isRecording
+            ? "bg-orange-500/20 border-orange-500/50"
+            : "bg-[#161b22] border-[#21262d] hover:border-orange-500/30 hover:bg-orange-500/5"
+            } ${activeButton === "ir" ? "scale-95" : ""}`}
         >
           <Radio size={24} className={`text-orange-400 ${isRecording ? "animate-pulse" : ""}`} />
           <span className="text-xs font-medium text-orange-400">

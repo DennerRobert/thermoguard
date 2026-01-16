@@ -57,7 +57,7 @@ export const TemperatureGauge = () => {
               strokeWidth={strokeWidth}
               strokeLinecap="round"
             />
-            
+
             {/* Gradient definition */}
             <defs>
               <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">

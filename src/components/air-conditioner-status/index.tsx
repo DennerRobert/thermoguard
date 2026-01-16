@@ -27,22 +27,20 @@ export const AirConditionerStatus = () => {
       <div className="space-y-3">
         {airConditioners.slice(0, 2).map((ac) => {
           const info = unitNames[ac.id] || { name: ac.name, location: ac.id };
-          
+
           return (
             <button
               key={ac.id}
               onClick={() => toggleAirConditioner(ac.id)}
-              className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                ac.isActive
-                  ? "bg-cyan-500/10 border-cyan-500/30"
-                  : "bg-[#161b22] border-[#21262d] hover:border-[#30363d]"
-              }`}
+              className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${ac.isActive
+                ? "bg-cyan-500/10 border-cyan-500/30"
+                : "bg-[#161b22] border-[#21262d] hover:border-[#30363d]"
+                }`}
             >
               <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-lg ${
-                    ac.isActive ? "bg-cyan-500/20" : "bg-[#21262d]"
-                  }`}
+                  className={`p-2 rounded-lg ${ac.isActive ? "bg-cyan-500/20" : "bg-[#21262d]"
+                    }`}
                 >
                   <Power
                     size={18}
@@ -54,14 +52,13 @@ export const AirConditionerStatus = () => {
                   <p className="text-xs text-[#6e7681]">{info.location}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <span
-                  className={`text-xs font-medium px-3 py-1 rounded-full ${
-                    ac.isActive
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-[#21262d] text-[#6e7681]"
-                  }`}
+                  className={`text-xs font-medium px-3 py-1 rounded-full ${ac.isActive
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-[#21262d] text-[#6e7681]"
+                    }`}
                 >
                   {ac.isActive ? "Ativa" : "Inativa"}
                 </span>

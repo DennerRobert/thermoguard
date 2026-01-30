@@ -1,5 +1,12 @@
 export interface User {
-    id: string;
-    email: string;
-    name: string;
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  role: "admin" | "operator" | "viewer";
+  role_display: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }

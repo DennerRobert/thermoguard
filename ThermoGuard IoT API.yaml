@@ -1,0 +1,2533 @@
+openapi: 3.0.3
+info:
+  title: ThermoGuard IoT API
+  version: 1.0.0
+  description: "\n    API RESTful para Sistema de Monitoramento Térmico de Data Center.\n\
+    \    \n    ## Funcionalidades\n    - Monitoramento de temperatura e umidade em\
+    \ tempo real\n    - Controle de ar-condicionado via infravermelho\n    - Sistema\
+    \ de alertas automáticos\n    - Dashboard com dados em tempo real via WebSocket\n\
+    \    \n    ## Autenticação\n    - JWT (Bearer Token) para usuários do dashboard\n\
+    \    - API Key para dispositivos ESP32\n    "
+paths:
+  /api/air-conditioners/:
+    get:
+      operationId: air_conditioners_list
+      description: List all air conditioners.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - air-conditioners
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAirConditionerList'
+          description: ''
+    post:
+      operationId: air_conditioners_create
+      description: Create a new air conditioner.
+      tags:
+      - air-conditioners
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirConditionerCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditionerCreate'
+          description: ''
+  /api/air-conditioners/{ac_id}/ir-signal/:
+    post:
+      operationId: air_conditioners_ir_signal_create
+      description: |-
+        Receive recorded IR signal from ESP32.
+
+        Args:
+            request: The incoming request.
+            ac_id: The air conditioner ID.
+
+        Returns:
+            Response confirming signal was saved.
+      parameters:
+      - in: path
+        name: ac_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - air-conditioners
+      responses:
+        '200':
+          description: No response body
+  /api/air-conditioners/{id}/:
+    get:
+      operationId: air_conditioners_retrieve
+      description: Retrieve a specific air conditioner.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditioner'
+          description: ''
+    put:
+      operationId: air_conditioners_update
+      description: Update an air conditioner.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirConditionerUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditionerUpdate'
+          description: ''
+    patch:
+      operationId: air_conditioners_partial_update
+      description: ViewSet for AirConditioner CRUD and control operations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAirConditionerUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditionerUpdate'
+          description: ''
+    delete:
+      operationId: air_conditioners_destroy
+      description: Delete an air conditioner.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/air-conditioners/{id}/ir_signals/:
+    get:
+      operationId: air_conditioners_ir_signals_retrieve
+      description: Get recorded IR signals for this air conditioner.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditioner'
+          description: ''
+  /api/air-conditioners/{id}/logs/:
+    get:
+      operationId: air_conditioners_logs_retrieve
+      description: Get command logs for this air conditioner.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditioner'
+          description: ''
+  /api/air-conditioners/{id}/record-ir/:
+    post:
+      operationId: air_conditioners_record_ir_create
+      description: |-
+        Start IR signal recording mode.
+
+        This triggers the ESP32 to enter recording mode.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirConditionerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditioner'
+          description: ''
+  /api/air-conditioners/{id}/toggle/:
+    post:
+      operationId: air_conditioners_toggle_create
+      description: Toggle the air conditioner on/off.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirConditionerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditioner'
+          description: ''
+  /api/air-conditioners/{id}/turn_off/:
+    post:
+      operationId: air_conditioners_turn_off_create
+      description: Turn off the air conditioner.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirConditionerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditioner'
+          description: ''
+  /api/air-conditioners/{id}/turn_on/:
+    post:
+      operationId: air_conditioners_turn_on_create
+      description: Turn on the air conditioner.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Ar-Condicionado.
+        required: true
+      tags:
+      - air-conditioners
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirConditionerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirConditioner'
+          description: ''
+  /api/air-conditioners/turn-off-all/:
+    post:
+      operationId: air_conditioners_turn_off_all_create
+      description: Turn off all air conditioners.
+      tags:
+      - air-conditioners
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/alerts/:
+    get:
+      operationId: alerts_list
+      description: List alerts with pagination.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - alerts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAlertListList'
+          description: ''
+  /api/alerts/{id}/:
+    get:
+      operationId: alerts_retrieve
+      description: Retrieve a specific alert.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Alerta.
+        required: true
+      tags:
+      - alerts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+          description: ''
+  /api/alerts/{id}/acknowledge/:
+    patch:
+      operationId: alerts_acknowledge_partial_update
+      description: |-
+        Acknowledge an alert.
+
+        Marks the alert as acknowledged by the current user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Alerta.
+        required: true
+      tags:
+      - alerts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAlertRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+          description: ''
+  /api/alerts/acknowledge_all/:
+    post:
+      operationId: alerts_acknowledge_all_create
+      description: |-
+        Acknowledge all unacknowledged alerts.
+
+        Optionally filter by room_id or severity.
+      tags:
+      - alerts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+          description: ''
+  /api/alerts/recent/:
+    get:
+      operationId: alerts_recent_retrieve
+      description: |-
+        Get recent alerts (last 24 hours).
+
+        Returns unacknowledged alerts from the last 24 hours.
+      tags:
+      - alerts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+          description: ''
+  /api/alerts/summary/:
+    get:
+      operationId: alerts_summary_retrieve
+      description: |-
+        Get alert summary.
+
+        Returns counts by severity and acknowledgement status.
+      tags:
+      - alerts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alert'
+          description: ''
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Authenticate user and return tokens.
+
+        Args:
+            request: The incoming request.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response with JWT tokens and user info.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPairRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: |-
+        Logout user by blacklisting refresh token.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response confirming logout.
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      description: |-
+        Get current user information.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response with user information.
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: auth_me_partial_update
+      description: |-
+        Update current user information.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response with updated user information.
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/me/password/:
+    post:
+      operationId: auth_me_password_create
+      description: |-
+        Change user password.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response confirming password change.
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Refresh the access token.
+
+        Args:
+            request: The incoming request.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response with new JWT tokens.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/users/:
+    get:
+      operationId: auth_users_list
+      description: List all users.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: auth_users_create
+      description: Create a new user.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+  /api/auth/users/{id}/:
+    get:
+      operationId: auth_users_retrieve
+      description: Retrieve a specific user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Usuário.
+        required: true
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: auth_users_update
+      description: Update a user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Usuário.
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: auth_users_partial_update
+      description: Partially update a user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Usuário.
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    delete:
+      operationId: auth_users_destroy
+      description: Delete a user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Usuário.
+        required: true
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/users/{id}/reset_password/:
+    post:
+      operationId: auth_users_reset_password_create
+      description: |-
+        Reset user password (admin only).
+
+        Args:
+            request: The incoming request.
+            pk: The user ID.
+
+        Returns:
+            Response with new temporary password.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Usuário.
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/dashboard/:
+    get:
+      operationId: dashboard_retrieve
+      description: |-
+        Return dashboard data.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response with dashboard data.
+      tags:
+      - dashboard
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/dashboard/rooms/{room_id}/:
+    get:
+      operationId: dashboard_rooms_retrieve
+      description: |-
+        Return room dashboard data.
+
+        Args:
+            request: The incoming request.
+            room_id: The room ID.
+
+        Returns:
+            Response with room dashboard data.
+      parameters:
+      - in: path
+        name: room_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - dashboard
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/datacenters/:
+    get:
+      operationId: datacenters_list
+      description: List all data centers.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - datacenters
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDataCenterList'
+          description: ''
+    post:
+      operationId: datacenters_create
+      description: Create a new data center.
+      tags:
+      - datacenters
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCenterCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCenterCreate'
+          description: ''
+  /api/datacenters/{id}/:
+    get:
+      operationId: datacenters_retrieve
+      description: Retrieve a specific data center.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Data Center.
+        required: true
+      tags:
+      - datacenters
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCenter'
+          description: ''
+    put:
+      operationId: datacenters_update
+      description: Update a data center.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Data Center.
+        required: true
+      tags:
+      - datacenters
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCenterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCenter'
+          description: ''
+    patch:
+      operationId: datacenters_partial_update
+      description: Partially update a data center.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Data Center.
+        required: true
+      tags:
+      - datacenters
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDataCenterRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCenter'
+          description: ''
+    delete:
+      operationId: datacenters_destroy
+      description: Delete a data center.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Data Center.
+        required: true
+      tags:
+      - datacenters
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/datacenters/{id}/rooms/:
+    get:
+      operationId: datacenters_rooms_retrieve
+      description: List all rooms in a data center.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Data Center.
+        required: true
+      tags:
+      - datacenters
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCenter'
+          description: ''
+  /api/reports/statistics/:
+    get:
+      operationId: reports_statistics_retrieve
+      description: |-
+        Return statistics.
+
+        Query params:
+            room_id: Filter by room (required)
+            period: 'day', 'week', 'month'
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response with statistics.
+      tags:
+      - reports
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/reports/temperature-history/:
+    get:
+      operationId: reports_temperature_history_retrieve
+      description: |-
+        Return temperature history.
+
+        Query params:
+            room_id: Filter by room
+            period: 'day', 'week', 'month'
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response with temperature history.
+      tags:
+      - reports
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/rooms/{room_id}/settings/:
+    get:
+      operationId: rooms_settings_retrieve
+      description: Get room settings.
+      parameters:
+      - in: path
+        name: room_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rooms
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: rooms_settings_partial_update
+      description: Update room settings (setpoint, mode).
+      parameters:
+      - in: path
+        name: room_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rooms
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/sensors/:
+    get:
+      operationId: sensors_list
+      description: List all sensors.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - sensors
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSensorList'
+          description: ''
+    post:
+      operationId: sensors_create
+      description: Create a new sensor.
+      tags:
+      - sensors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorCreate'
+          description: ''
+  /api/sensors/{id}/:
+    get:
+      operationId: sensors_retrieve
+      description: Retrieve a specific sensor.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Sensor.
+        required: true
+      tags:
+      - sensors
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+          description: ''
+    put:
+      operationId: sensors_update
+      description: Update a sensor.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Sensor.
+        required: true
+      tags:
+      - sensors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorUpdate'
+          description: ''
+    patch:
+      operationId: sensors_partial_update
+      description: Partially update a sensor.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Sensor.
+        required: true
+      tags:
+      - sensors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSensorUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorUpdate'
+          description: ''
+    delete:
+      operationId: sensors_destroy
+      description: Delete a sensor.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Sensor.
+        required: true
+      tags:
+      - sensors
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sensors/{id}/readings/:
+    get:
+      operationId: sensors_readings_retrieve
+      description: |-
+        Get readings for a specific sensor.
+
+        Query params:
+            start_date: Filter readings from this date
+            end_date: Filter readings until this date
+            limit: Limit number of readings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Sensor.
+        required: true
+      tags:
+      - sensors
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+          description: ''
+  /api/sensors/{id}/readings/latest/:
+    get:
+      operationId: sensors_readings_latest_retrieve_2
+      description: Get the latest reading for a specific sensor.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this Sensor.
+        required: true
+      tags:
+      - sensors
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+          description: ''
+  /api/sensors/{sensor_id}/readings/:
+    post:
+      operationId: sensors_readings_create_2
+      description: |-
+        Create a new sensor reading.
+
+        Args:
+            request: The incoming request.
+            sensor_id: Optional sensor ID from URL.
+
+        Returns:
+            Response with created reading.
+      parameters:
+      - in: path
+        name: sensor_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sensors
+      responses:
+        '200':
+          description: No response body
+  /api/sensors/readings/:
+    post:
+      operationId: sensors_readings_create
+      description: |-
+        Create a new sensor reading.
+
+        Args:
+            request: The incoming request.
+            sensor_id: Optional sensor ID from URL.
+
+        Returns:
+            Response with created reading.
+      tags:
+      - sensors
+      responses:
+        '200':
+          description: No response body
+  /api/sensors/readings/bulk/:
+    post:
+      operationId: sensors_readings_bulk_create
+      description: |-
+        Create multiple sensor readings.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response with created readings.
+      tags:
+      - sensors
+      responses:
+        '200':
+          description: No response body
+  /api/sensors/readings/latest/:
+    get:
+      operationId: sensors_readings_latest_retrieve
+      description: |-
+        Get latest readings for all sensors.
+
+        Query params:
+            room_id: Filter by room
+            datacenter_id: Filter by data center
+      tags:
+      - sensors
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /health/:
+    get:
+      operationId: health_retrieve
+      description: |-
+        Return health status.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            Response with health status.
+      tags:
+      - health
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    AirConditioner:
+      type: object
+      description: |-
+        Serializer for AirConditioner model.
+
+        Includes room information and IR code status.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        room_name:
+          type: string
+          readOnly: true
+        data_center_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        status_display:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          title: Ativo
+        has_ir_codes:
+          type: boolean
+          readOnly: true
+        esp32_device_id:
+          type: string
+          title: ID do ESP32 Transmissor
+          description: MAC address do ESP32 que controla este AC
+          maxLength: 50
+        last_command:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Último Comando
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - created_at
+      - data_center_name
+      - has_ir_codes
+      - id
+      - last_command
+      - name
+      - room
+      - room_name
+      - status
+      - status_display
+      - updated_at
+    AirConditionerCreate:
+      type: object
+      description: Serializer for creating air conditioners.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: Ativo
+        esp32_device_id:
+          type: string
+          title: ID do ESP32 Transmissor
+          description: MAC address do ESP32 que controla este AC
+          maxLength: 50
+      required:
+      - name
+      - room
+    AirConditionerCreateRequest:
+      type: object
+      description: Serializer for creating air conditioners.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: Ativo
+        esp32_device_id:
+          type: string
+          title: ID do ESP32 Transmissor
+          description: MAC address do ESP32 que controla este AC
+          maxLength: 50
+      required:
+      - name
+      - room
+    AirConditionerRequest:
+      type: object
+      description: |-
+        Serializer for AirConditioner model.
+
+        Includes room information and IR code status.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: Ativo
+        esp32_device_id:
+          type: string
+          title: ID do ESP32 Transmissor
+          description: MAC address do ESP32 que controla este AC
+          maxLength: 50
+      required:
+      - name
+      - room
+    AirConditionerUpdate:
+      type: object
+      description: Serializer for updating air conditioners.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: Ativo
+        esp32_device_id:
+          type: string
+          title: ID do ESP32 Transmissor
+          description: MAC address do ESP32 que controla este AC
+          maxLength: 50
+      required:
+      - name
+      - room
+    AirConditionerUpdateRequest:
+      type: object
+      description: Serializer for updating air conditioners.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: Ativo
+        esp32_device_id:
+          type: string
+          title: ID do ESP32 Transmissor
+          description: MAC address do ESP32 que controla este AC
+          maxLength: 50
+      required:
+      - name
+      - room
+    Alert:
+      type: object
+      description: |-
+        Serializer for Alert model.
+
+        Includes room information and display values.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        room:
+          type: string
+          format: uuid
+          readOnly: true
+          title: Sala
+        room_name:
+          type: string
+          readOnly: true
+        data_center_name:
+          type: string
+          readOnly: true
+        alert_type:
+          allOf:
+          - $ref: '#/components/schemas/AlertTypeEnum'
+          readOnly: true
+          title: Tipo de Alerta
+        alert_type_display:
+          type: string
+          readOnly: true
+        severity:
+          allOf:
+          - $ref: '#/components/schemas/SeverityEnum'
+          readOnly: true
+          title: Severidade
+        severity_display:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+          title: Mensagem
+        is_acknowledged:
+          type: boolean
+          title: Reconhecido
+        acknowledged_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          title: Reconhecido Por
+        acknowledged_by_email:
+          type: string
+          readOnly: true
+          nullable: true
+        acknowledged_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Reconhecido Em
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - acknowledged_at
+      - acknowledged_by
+      - acknowledged_by_email
+      - alert_type
+      - alert_type_display
+      - created_at
+      - data_center_name
+      - id
+      - message
+      - room
+      - room_name
+      - severity
+      - severity_display
+      - updated_at
+    AlertList:
+      type: object
+      description: Lightweight serializer for Alert listing.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        room_name:
+          type: string
+          readOnly: true
+        alert_type:
+          allOf:
+          - $ref: '#/components/schemas/AlertTypeEnum'
+          title: Tipo de Alerta
+        alert_type_display:
+          type: string
+          readOnly: true
+        severity:
+          allOf:
+          - $ref: '#/components/schemas/SeverityEnum'
+          title: Severidade
+        severity_display:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          title: Mensagem
+        is_acknowledged:
+          type: boolean
+          title: Reconhecido
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+      required:
+      - alert_type
+      - alert_type_display
+      - created_at
+      - id
+      - message
+      - room
+      - room_name
+      - severity_display
+    AlertRequest:
+      type: object
+      description: |-
+        Serializer for Alert model.
+
+        Includes room information and display values.
+      properties:
+        is_acknowledged:
+          type: boolean
+          title: Reconhecido
+    AlertTypeEnum:
+      enum:
+      - high_temp
+      - low_temp
+      - high_humidity
+      - low_humidity
+      - sensor_offline
+      - ac_error
+      - system_error
+      type: string
+      description: |-
+        * `high_temp` - Temperatura Alta
+        * `low_temp` - Temperatura Baixa
+        * `high_humidity` - Umidade Alta
+        * `low_humidity` - Umidade Baixa
+        * `sensor_offline` - Sensor Offline
+        * `ac_error` - Erro no Ar-Condicionado
+        * `system_error` - Erro do Sistema
+    CustomTokenObtainPairRequest:
+      type: object
+      description: |-
+        Custom token serializer that includes user info in response.
+
+        Extends the default JWT token serializer to include additional
+        user information in the token claims and response.
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    DataCenter:
+      type: object
+      description: |-
+        Serializer for DataCenter model.
+
+        Includes computed properties for room counts.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        location:
+          type: string
+          title: Localização
+          maxLength: 500
+        is_active:
+          type: boolean
+          title: Ativo
+        room_count:
+          type: integer
+          readOnly: true
+        active_room_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - active_room_count
+      - created_at
+      - id
+      - location
+      - name
+      - room_count
+      - updated_at
+    DataCenterCreate:
+      type: object
+      description: Serializer for creating DataCenter.
+      properties:
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        location:
+          type: string
+          title: Localização
+          maxLength: 500
+        is_active:
+          type: boolean
+          title: Ativo
+      required:
+      - location
+      - name
+    DataCenterCreateRequest:
+      type: object
+      description: Serializer for creating DataCenter.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        location:
+          type: string
+          minLength: 1
+          title: Localização
+          maxLength: 500
+        is_active:
+          type: boolean
+          title: Ativo
+      required:
+      - location
+      - name
+    DataCenterRequest:
+      type: object
+      description: |-
+        Serializer for DataCenter model.
+
+        Includes computed properties for room counts.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        location:
+          type: string
+          minLength: 1
+          title: Localização
+          maxLength: 500
+        is_active:
+          type: boolean
+          title: Ativo
+      required:
+      - location
+      - name
+    PaginatedAirConditionerList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AirConditioner'
+    PaginatedAlertListList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertList'
+    PaginatedDataCenterList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataCenter'
+    PaginatedSensorList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sensor'
+    PaginatedUserList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PatchedAirConditionerUpdateRequest:
+      type: object
+      description: Serializer for updating air conditioners.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        is_active:
+          type: boolean
+          title: Ativo
+        esp32_device_id:
+          type: string
+          title: ID do ESP32 Transmissor
+          description: MAC address do ESP32 que controla este AC
+          maxLength: 50
+    PatchedAlertRequest:
+      type: object
+      description: |-
+        Serializer for Alert model.
+
+        Includes room information and display values.
+      properties:
+        is_acknowledged:
+          type: boolean
+          title: Reconhecido
+    PatchedDataCenterRequest:
+      type: object
+      description: |-
+        Serializer for DataCenter model.
+
+        Includes computed properties for room counts.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        location:
+          type: string
+          minLength: 1
+          title: Localização
+          maxLength: 500
+        is_active:
+          type: boolean
+          title: Ativo
+    PatchedSensorUpdateRequest:
+      type: object
+      description: Serializer for updating sensors.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        sensor_type:
+          allOf:
+          - $ref: '#/components/schemas/SensorTypeEnum'
+          title: Tipo de Sensor
+    PatchedUserUpdateRequest:
+      type: object
+      description: Serializer for updating user information.
+      properties:
+        first_name:
+          type: string
+          title: Nome
+          maxLength: 150
+        last_name:
+          type: string
+          title: Sobrenome
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Função
+        is_active:
+          type: boolean
+          title: Ativo
+    RoleEnum:
+      enum:
+      - admin
+      - operator
+      - viewer
+      type: string
+      description: |-
+        * `admin` - Administrador
+        * `operator` - Operador
+        * `viewer` - Visualizador
+    Sensor:
+      type: object
+      description: |-
+        Serializer for Sensor model.
+
+        Includes room information and status details.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        room_name:
+          type: string
+          readOnly: true
+        data_center_name:
+          type: string
+          readOnly: true
+        device_id:
+          type: string
+          title: ID do Dispositivo
+          description: MAC address do ESP32
+          maxLength: 50
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        sensor_type:
+          allOf:
+          - $ref: '#/components/schemas/SensorTypeEnum'
+          title: Tipo de Sensor
+        sensor_type_display:
+          type: string
+          readOnly: true
+        is_online:
+          type: boolean
+          readOnly: true
+          title: Online
+        last_seen:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Última Atividade
+        minutes_since_last_seen:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - created_at
+      - data_center_name
+      - device_id
+      - id
+      - is_online
+      - last_seen
+      - minutes_since_last_seen
+      - name
+      - room
+      - room_name
+      - sensor_type_display
+      - updated_at
+    SensorCreate:
+      type: object
+      description: Serializer for creating sensors.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        device_id:
+          type: string
+          title: ID do Dispositivo
+          description: MAC address do ESP32
+          maxLength: 50
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        sensor_type:
+          allOf:
+          - $ref: '#/components/schemas/SensorTypeEnum'
+          title: Tipo de Sensor
+      required:
+      - device_id
+      - name
+      - room
+    SensorCreateRequest:
+      type: object
+      description: Serializer for creating sensors.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        device_id:
+          type: string
+          minLength: 1
+          title: ID do Dispositivo
+          description: MAC address do ESP32
+          maxLength: 50
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        sensor_type:
+          allOf:
+          - $ref: '#/components/schemas/SensorTypeEnum'
+          title: Tipo de Sensor
+      required:
+      - device_id
+      - name
+      - room
+    SensorTypeEnum:
+      enum:
+      - temperature
+      - humidity
+      - both
+      type: string
+      description: |-
+        * `temperature` - Temperatura
+        * `humidity` - Umidade
+        * `both` - Temperatura e Umidade
+    SensorUpdate:
+      type: object
+      description: Serializer for updating sensors.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          title: Nome
+          maxLength: 255
+        sensor_type:
+          allOf:
+          - $ref: '#/components/schemas/SensorTypeEnum'
+          title: Tipo de Sensor
+      required:
+      - name
+      - room
+    SensorUpdateRequest:
+      type: object
+      description: Serializer for updating sensors.
+      properties:
+        room:
+          type: string
+          format: uuid
+          title: Sala
+        name:
+          type: string
+          minLength: 1
+          title: Nome
+          maxLength: 255
+        sensor_type:
+          allOf:
+          - $ref: '#/components/schemas/SensorTypeEnum'
+          title: Tipo de Sensor
+      required:
+      - name
+      - room
+    SeverityEnum:
+      enum:
+      - info
+      - warning
+      - critical
+      type: string
+      description: |-
+        * `info` - Informação
+        * `warning` - Aviso
+        * `critical` - Crítico
+    StatusEnum:
+      enum:
+      - 'on'
+      - 'off'
+      - error
+      type: string
+      description: |-
+        * `on` - Ligado
+        * `off` - Desligado
+        * `error` - Erro
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    User:
+      type: object
+      description: |-
+        Serializer for User model.
+
+        Provides read-only access to user information.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          title: Nome
+          maxLength: 150
+        last_name:
+          type: string
+          title: Sobrenome
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Função
+        role_display:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          title: Ativo
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - created_at
+      - email
+      - full_name
+      - id
+      - role_display
+      - updated_at
+    UserCreate:
+      type: object
+      description: |-
+        Serializer for creating new users.
+
+        Includes password validation and confirmation.
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          title: Nome
+          maxLength: 150
+        last_name:
+          type: string
+          title: Sobrenome
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Função
+      required:
+      - email
+    UserCreateRequest:
+      type: object
+      description: |-
+        Serializer for creating new users.
+
+        Includes password validation and confirmation.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+        first_name:
+          type: string
+          title: Nome
+          maxLength: 150
+        last_name:
+          type: string
+          title: Sobrenome
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Função
+      required:
+      - email
+      - password
+      - password_confirm
+    UserRequest:
+      type: object
+      description: |-
+        Serializer for User model.
+
+        Provides read-only access to user information.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        first_name:
+          type: string
+          title: Nome
+          maxLength: 150
+        last_name:
+          type: string
+          title: Sobrenome
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Função
+        is_active:
+          type: boolean
+          title: Ativo
+      required:
+      - email
+    UserUpdate:
+      type: object
+      description: Serializer for updating user information.
+      properties:
+        first_name:
+          type: string
+          title: Nome
+          maxLength: 150
+        last_name:
+          type: string
+          title: Sobrenome
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Função
+        is_active:
+          type: boolean
+          title: Ativo
+    UserUpdateRequest:
+      type: object
+      description: Serializer for updating user information.
+      properties:
+        first_name:
+          type: string
+          title: Nome
+          maxLength: 150
+        last_name:
+          type: string
+          title: Sobrenome
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Função
+        is_active:
+          type: boolean
+          title: Ativo
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+- name: auth
+  description: Autenticação e autorização
+- name: dashboard
+  description: Dados do dashboard
+- name: sensors
+  description: Gerenciamento de sensores
+- name: devices
+  description: Controle de dispositivos
+- name: alerts
+  description: Sistema de alertas
+- name: reports
+  description: Relatórios e estatísticas

@@ -7,43 +7,69 @@ import { useThermoGuardStore } from "@/stores/thermoguard";
 export const ControlPanel = () => {
   const {
     setpoint,
-    setSetpoint,
     mode,
-    setMode,
     airConditioners,
     turnOnAirConditioner,
     turnOffAllAirConditioners,
     recordIRSignal,
+    updateSetpoint,
+    updateMode,
   } = useThermoGuardStore();
 
   const [isRecording, setIsRecording] = useState(false);
   const [activeButton, setActiveButton] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleButtonClick = useCallback((buttonId: string, action: () => void) => {
-    setActiveButton(buttonId);
-    action();
-    setTimeout(() => setActiveButton(null), 200);
-  }, []);
+  const handleButtonClick = useCallback(
+    async (buttonId: string, action: () => Promise<void>) => {
+      if (isProcessing) return;
+      
+      setActiveButton(buttonId);
+      setIsProcessing(true);
+      
+      try {
+        await action();
+      } catch (error) {
+        console.error("Erro ao executar ação:", error);
+      } finally {
+        setIsProcessing(false);
+        setTimeout(() => setActiveButton(null), 200);
+      }
+    },
+    [isProcessing]
+  );
 
-  const handleTurnOn = () => {
+  const handleTurnOn = async () => {
     const offAc = airConditioners.find((ac) => ac.status === "off");
     if (offAc) {
-      turnOnAirConditioner(offAc.id);
+      await turnOnAirConditioner(offAc.id);
     }
   };
 
-  const handleTurnOff = () => {
-    turnOffAllAirConditioners();
+  const handleTurnOff = async () => {
+    await turnOffAllAirConditioners();
   };
 
-  const handleAutoMode = () => {
-    setMode(mode === "automatic" ? "manual" : "automatic");
+  const handleAutoMode = async () => {
+    await updateMode(mode === "automatic" ? "manual" : "automatic");
   };
 
   const handleRecordIR = async () => {
+    const firstAc = airConditioners[0];
+    if (!firstAc) return;
+
     setIsRecording(true);
-    await recordIRSignal();
-    setIsRecording(false);
+    try {
+      await recordIRSignal(firstAc.id);
+    } catch (error) {
+      console.error("Erro ao gravar sinal IR:", error);
+    } finally {
+      setIsRecording(false);
+    }
+  };
+
+  const handleSetpointChange = async (value: number) => {
+    await updateSetpoint(value);
   };
 
   return (
@@ -59,10 +85,12 @@ export const ControlPanel = () => {
         {/* Ligar Ar */}
         <button
           onClick={() => handleButtonClick("on", handleTurnOn)}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${activeButton === "on"
-            ? "bg-green-500/20 border-green-500/50 scale-95"
-            : "bg-[#161b22] border-[#21262d] hover:border-green-500/30 hover:bg-green-500/5"
-            }`}
+          disabled={isProcessing}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+            activeButton === "on"
+              ? "bg-green-500/20 border-green-500/50 scale-95"
+              : "bg-[#161b22] border-[#21262d] hover:border-green-500/30 hover:bg-green-500/5"
+          }`}
         >
           <Power size={24} className="text-green-400" />
           <span className="text-xs font-medium text-green-400">Ligar Ar</span>
@@ -71,10 +99,12 @@ export const ControlPanel = () => {
         {/* Desligar Ar */}
         <button
           onClick={() => handleButtonClick("off", handleTurnOff)}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${activeButton === "off"
-            ? "bg-red-500/20 border-red-500/50 scale-95"
-            : "bg-[#161b22] border-[#21262d] hover:border-red-500/30 hover:bg-red-500/5"
-            }`}
+          disabled={isProcessing}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+            activeButton === "off"
+              ? "bg-red-500/20 border-red-500/50 scale-95"
+              : "bg-[#161b22] border-[#21262d] hover:border-red-500/30 hover:bg-red-500/5"
+          }`}
         >
           <PowerOff size={24} className="text-red-400" />
           <span className="text-xs font-medium text-red-400">Desligar Ar</span>
@@ -83,10 +113,12 @@ export const ControlPanel = () => {
         {/* Modo Automático */}
         <button
           onClick={() => handleButtonClick("auto", handleAutoMode)}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${mode === "automatic"
-            ? "bg-cyan-500/20 border-cyan-500/50"
-            : "bg-[#161b22] border-[#21262d] hover:border-cyan-500/30 hover:bg-cyan-500/5"
-            } ${activeButton === "auto" ? "scale-95" : ""}`}
+          disabled={isProcessing}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+            mode === "automatic"
+              ? "bg-cyan-500/20 border-cyan-500/50"
+              : "bg-[#161b22] border-[#21262d] hover:border-cyan-500/30 hover:bg-cyan-500/5"
+          } ${activeButton === "auto" ? "scale-95" : ""}`}
         >
           <Settings2 size={24} className="text-cyan-400" />
           <span className="text-xs font-medium text-cyan-400">
@@ -96,14 +128,18 @@ export const ControlPanel = () => {
 
         {/* Gravar Sinal IR */}
         <button
-          onClick={() => handleButtonClick("ir", handleRecordIR)}
-          disabled={isRecording}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all ${isRecording
-            ? "bg-orange-500/20 border-orange-500/50"
-            : "bg-[#161b22] border-[#21262d] hover:border-orange-500/30 hover:bg-orange-500/5"
-            } ${activeButton === "ir" ? "scale-95" : ""}`}
+          onClick={handleRecordIR}
+          disabled={isRecording || isProcessing}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+            isRecording
+              ? "bg-orange-500/20 border-orange-500/50"
+              : "bg-[#161b22] border-[#21262d] hover:border-orange-500/30 hover:bg-orange-500/5"
+          } ${activeButton === "ir" ? "scale-95" : ""}`}
         >
-          <Radio size={24} className={`text-orange-400 ${isRecording ? "animate-pulse" : ""}`} />
+          <Radio
+            size={24}
+            className={`text-orange-400 ${isRecording ? "animate-pulse" : ""}`}
+          />
           <span className="text-xs font-medium text-orange-400">
             Gravar Sinal IR
           </span>
@@ -125,10 +161,12 @@ export const ControlPanel = () => {
             max={30}
             step={1}
             value={setpoint}
-            onChange={(e) => setSetpoint(parseFloat(e.target.value))}
+            onChange={(e) => handleSetpointChange(parseFloat(e.target.value))}
             className="w-full"
             style={{
-              background: `linear-gradient(to right, #22c55e 0%, #22c55e ${((setpoint - 18) / 12) * 100}%, #21262d ${((setpoint - 18) / 12) * 100}%, #21262d 100%)`,
+              background: `linear-gradient(to right, #22c55e 0%, #22c55e ${
+                ((setpoint - 18) / 12) * 100
+              }%, #21262d ${((setpoint - 18) / 12) * 100}%, #21262d 100%)`,
             }}
           />
           <div className="flex justify-between mt-2">

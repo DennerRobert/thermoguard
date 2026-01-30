@@ -16,15 +16,11 @@ export default function DashboardPage() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     const {
-        updateSensorData,
-        addTemperatureHistoryPoint,
-        currentTemperature,
-        currentHumidity,
-        setpoint,
-        mode,
-        airConditioners,
-        turnOnAirConditioner,
-        turnOffAirConditioner,
+        startPolling,
+        stopPolling,
+        fetchAirConditioners,
+        fetchSensorData,
+        fetchTemperatureHistory,
     } = useThermoGuardStore();
 
     // Proteção de rota - redireciona para login se não autenticado
@@ -34,56 +30,27 @@ export default function DashboardPage() {
         }
     }, [isAuthenticated, router]);
 
-    // Simulate real-time sensor data updates
+    // Inicializa dashboard e inicia polling
     useEffect(() => {
-        const interval = setInterval(() => {
-            const tempVariation = (Math.random() - 0.5) * 0.8;
-            const humidityVariation = (Math.random() - 0.5) * 3;
+        if (!isAuthenticated) return;
 
-            const newTemp = Math.round((currentTemperature + tempVariation) * 10) / 10;
-            const newHumidity = Math.round(
-                Math.max(20, Math.min(80, currentHumidity + humidityVariation))
-            );
+        const initializeDashboard = async () => {
+            // Busca dados iniciais
+            await fetchAirConditioners();
+            await fetchSensorData();
+            await fetchTemperatureHistory();
+            
+            // Inicia polling para atualizações a cada 1 minuto
+            startPolling();
+        };
 
-            const now = new Date();
+        initializeDashboard();
 
-            updateSensorData({
-                temperature: newTemp,
-                humidity: newHumidity,
-                timestamp: now,
-            });
-
-            addTemperatureHistoryPoint({
-                time: now.toLocaleTimeString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                }),
-                temperature: newTemp,
-                humidity: newHumidity,
-            });
-        }, 3000);
-
-        return () => clearInterval(interval);
-    }, [currentTemperature, currentHumidity, updateSensorData, addTemperatureHistoryPoint]);
-
-    // Automatic mode control logic
-    useEffect(() => {
-        if (mode !== "automatic") return;
-
-        const activeACs = airConditioners.filter((ac) => ac.isActive);
-
-        if (currentTemperature > setpoint + 1 && activeACs.length < airConditioners.length) {
-            const offAC = airConditioners.find((ac) => !ac.isActive);
-            if (offAC) {
-                turnOnAirConditioner(offAC.id);
-            }
-        } else if (currentTemperature < setpoint - 1 && activeACs.length > 0) {
-            const onAC = activeACs[activeACs.length - 1];
-            if (onAC) {
-                turnOffAirConditioner(onAC.id);
-            }
-        }
-    }, [currentTemperature, setpoint, mode, airConditioners, turnOnAirConditioner, turnOffAirConditioner]);
+        // Cleanup: para o polling ao desmontar
+        return () => {
+            stopPolling();
+        };
+    }, [isAuthenticated, startPolling, stopPolling, fetchAirConditioners, fetchSensorData, fetchTemperatureHistory]);
 
     // Não renderiza nada se não estiver autenticado
     if (!isAuthenticated) {

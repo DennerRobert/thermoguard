@@ -50,32 +50,11 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export const TemperatureHistoryChart = () => {
   const temperatureHistory = useThermoGuardStore((state) => state.temperatureHistory);
-  const addTemperatureHistoryPoint = useThermoGuardStore((state) => state.addTemperatureHistoryPoint);
   const [isClient, setIsClient] = useState(false);
 
-  // Initialize history data on client side only
+  // Apenas marca como cliente, sem gerar dados mockados
   useEffect(() => {
     setIsClient(true);
-
-    if (temperatureHistory.length === 0) {
-      const now = new Date();
-      for (let i = 29; i >= 0; i--) {
-        const time = new Date(now.getTime() - i * 60000);
-        const baseTemp = 24;
-        const tempVariation = Math.sin(i * 0.3) * 2 + Math.random() * 1.5;
-        const baseHumidity = 45;
-        const humidityVariation = Math.cos(i * 0.2) * 5 + Math.random() * 3;
-
-        addTemperatureHistoryPoint({
-          time: time.toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          temperature: Math.round((baseTemp + tempVariation) * 10) / 10,
-          humidity: Math.round(baseHumidity + humidityVariation),
-        });
-      }
-    }
   }, []);
 
   const stats = useMemo(() => {

@@ -8,18 +8,16 @@ import { loginSchema } from "@/schemas/login.schema";
 
 export const LoginForm = () => {
     const router = useRouter();
-    const login = useAuthStore((state) => state.login);
+    const { login, isLoading, error, clearError } = useAuthStore();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-    const [isLoading, setIsLoading] = useState(false);
-    const [loginError, setLoginError] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrors({});
-        setLoginError("");
+        clearError();
 
         // Validação com Zod
         const result = loginSchema.safeParse({ email, password });
@@ -38,19 +36,10 @@ export const LoginForm = () => {
         }
 
         // Tentar fazer login
-        setIsLoading(true);
-        try {
-            const success = await login(email, password);
+        const success = await login(email, password);
 
-            if (success) {
-                router.push("/dashboard");
-            } else {
-                setLoginError("Email ou senha incorretos");
-            }
-        } catch (error) {
-            setLoginError("Erro ao fazer login. Tente novamente.");
-        } finally {
-            setIsLoading(false);
+        if (success) {
+            router.push("/dashboard");
         }
     };
 
@@ -126,11 +115,11 @@ export const LoginForm = () => {
                         </div>
 
                         {/* Erro de login */}
-                        {loginError && (
+                        {error && (
                             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
                                 <p className="text-sm text-red-400 flex items-center gap-2">
                                     <AlertCircle size={16} />
-                                    {loginError}
+                                    {error}
                                 </p>
                             </div>
                         )}
@@ -156,10 +145,10 @@ export const LoginForm = () => {
                     <div className="mt-6 p-4 bg-[#161b22] rounded-xl border border-[#30363d]">
                         <p className="text-xs text-[#6e7681] mb-2 font-medium">Credenciais de teste:</p>
                         <p className="text-xs text-[#8b949e]">
-                            <span className="text-cyan-400">Email:</span> admin@thermoguard.com
+                            <span className="text-cyan-400">Email:</span> admin@admin.com
                         </p>
                         <p className="text-xs text-[#8b949e]">
-                            <span className="text-cyan-400">Senha:</span> admin123
+                            <span className="text-cyan-400">Senha:</span> admin
                         </p>
                     </div>
                 </div>

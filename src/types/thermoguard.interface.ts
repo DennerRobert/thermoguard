@@ -2,7 +2,7 @@ export type ConnectionStatus = "online" | "offline" | "connecting";
 
 export type AirConditionerMode = "manual" | "automatic";
 
-export type AirConditionerStatus = "on" | "off";
+export type AirConditionerStatus = "on" | "off"; 
 
 export interface AirConditionerUnit {
   id: string;

@@ -15,13 +15,10 @@ export const SensorsService = {
    * Lista todos os sensores
    */
   async list(): Promise<PaginatedResponse<Sensor>> {
-    console.log("🔍 SensorsService.list() - Buscando sensores em: /api/sensors/");
     const response = await apiClient.get<any>("/api/sensors/");
-    console.log("📦 SensorsService.list() - Resposta recebida:", response);
     
     // Adaptar formato customizado da API {success, data, pagination}
     if (response.success && response.data) {
-      console.log("✅ SensorsService.list() - Formato customizado detectado, sensores:", response.data.length);
       return {
         count: response.pagination?.count || response.data.length,
         next: response.pagination?.next || null,
@@ -31,7 +28,6 @@ export const SensorsService = {
     }
     
     // Fallback para formato padrão DRF
-    console.log("⚠️ SensorsService.list() - Usando fallback para formato padrão");
     return response;
   },
 
@@ -68,20 +64,19 @@ export const SensorsService = {
 
     const query = queryParams.toString();
     const endpoint = `/api/sensors/${sensorId}/readings/${query ? `?${query}` : ""}`;
-
-    console.log("🔍 SensorsService.getSensorReadings() - Endpoint:", endpoint);
-    console.log("📋 SensorsService.getSensorReadings() - Params:", params);
     
     const response = await apiClient.get(endpoint);
-    console.log("📦 SensorsService.getSensorReadings() - Resposta recebida:", response);
     
     // Adaptar formato customizado da API {success, data}
     if (response && response.success && response.data) {
-      console.log("✅ SensorsService.getSensorReadings() - Leituras encontradas:", Array.isArray(response.data) ? response.data.length : "não é array");
       return response.data;
     }
     
-    console.log("⚠️ SensorsService.getSensorReadings() - Retornando resposta direta");
+    // Se for formato padrão DRF com results
+    if (response && response.results) {
+      return response.results;
+    }
+    
     return response;
   },
 };

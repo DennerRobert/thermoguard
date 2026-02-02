@@ -86,58 +86,39 @@ export const useThermoGuardStore = create<ThermoGuardStore>((set, get) => ({
   fetchSensorData: async () => {
     const { roomId } = get();
     
-    console.log("🚀 [fetchSensorData] INICIANDO");
-    console.log("🏠 [fetchSensorData] roomId:", roomId);
-    
-    if (!roomId) {
-      console.log("⚠️ [fetchSensorData] roomId não definido - ABORTANDO");
-      return;
-    }
+    if (!roomId) return;
     
     try {
-      console.log("🔍 [fetchSensorData] Buscando sensores da sala:", roomId);
-      
       const sensorsResponse = await SensorsService.list();
-      console.log("📦 [fetchSensorData] Sensores recebidos:", sensorsResponse);
-      
       const roomSensors = sensorsResponse.results.filter(
         (sensor) => sensor.room === roomId
       );
-      console.log("🏠 [fetchSensorData] Sensores da sala:", roomSensors.length);
 
       if (roomSensors.length === 0) {
-        console.log("⚠️ [fetchSensorData] Nenhum sensor encontrado na sala - OFFLINE");
         set({ connectionStatus: "offline" });
         return;
       }
 
       const sensor =
         roomSensors.find((s) => s.sensor_type === "both") || roomSensors[0];
-      
-      console.log("✅ [fetchSensorData] Sensor selecionado:", sensor.id, "| Online:", sensor.is_online);
 
       const readings = await SensorsService.getSensorReadings(sensor.id, {
         limit: 1,
       });
-      console.log("📦 [fetchSensorData] Leituras recebidas:", readings);
 
       if (Array.isArray(readings) && readings.length > 0) {
         const latest = readings[0];
         const temperature = latest.temperature || 0;
         const humidity = latest.humidity || 0;
-        
-        console.log("✅ [fetchSensorData] Leitura processada:", { temperature, humidity });
 
         set({
           currentTemperature: temperature,
           currentHumidity: humidity,
-          lastUpdate: new Date(latest.created_at),
+          lastUpdate: new Date(latest.timestamp),
           connectionStatus: sensor.is_online ? "online" : "offline",
           error: null,
         });
-        console.log("✅ [fetchSensorData] Estado atualizado com sucesso!");
       } else {
-        console.log("⚠️ [fetchSensorData] Nenhuma leitura encontrada - OFFLINE");
         set({
           currentTemperature: 0,
           currentHumidity: 0,
@@ -145,87 +126,58 @@ export const useThermoGuardStore = create<ThermoGuardStore>((set, get) => ({
         });
       }
     } catch (error) {
-      console.error("❌ [fetchSensorData] ERRO:", error);
-      console.error("❌ [fetchSensorData] Stack:", error instanceof Error ? error.stack : "N/A");
+      console.error("Erro ao buscar dados do sensor:", error);
       set({
         connectionStatus: "offline",
       });
     }
-    
-    console.log("🏁 [fetchSensorData] CONCLUÍDO");
   },
 
   fetchTemperatureHistory: async () => {
     const { roomId } = get();
     
-    console.log("🚀 [fetchTemperatureHistory] INICIANDO");
-    console.log("🏠 [fetchTemperatureHistory] roomId:", roomId);
-    
-    if (!roomId) {
-      console.log("⚠️ [fetchTemperatureHistory] roomId não definido - ABORTANDO");
-      return;
-    }
+    if (!roomId) return;
 
     try {
-      console.log("🔍 [fetchTemperatureHistory] Buscando sensores da sala:", roomId);
-      
       const sensorsResponse = await SensorsService.list();
-      console.log("📦 [fetchTemperatureHistory] Sensores recebidos:", sensorsResponse);
       
-      if (!sensorsResponse || !sensorsResponse.results) {
-        console.error("❌ [fetchTemperatureHistory] Resposta de sensores inválida:", sensorsResponse);
-        return;
-      }
+      if (!sensorsResponse || !sensorsResponse.results) return;
       
       const roomSensors = sensorsResponse.results.filter(
         (sensor) => sensor.room === roomId
       );
-      console.log("🏠 [fetchTemperatureHistory] Sensores da sala:", roomSensors.length);
 
-      if (roomSensors.length === 0) {
-        console.log("⚠️ [fetchTemperatureHistory] Nenhum sensor encontrado na sala - ABORTANDO");
-        return;
-      }
+      if (roomSensors.length === 0) return;
 
       const sensor =
         roomSensors.find((s) => s.sensor_type === "both") || roomSensors[0];
-      console.log("✅ [fetchTemperatureHistory] Sensor selecionado:", sensor.id, "| Nome:", sensor.name);
 
       const readings = await SensorsService.getSensorReadings(sensor.id, {
         limit: 30,
       });
-      console.log("📦 [fetchTemperatureHistory] Leituras recebidas:", readings);
-
       if (Array.isArray(readings) && readings.length > 0) {
         const history: TemperatureHistoryPoint[] = readings
-          .map((reading: any) => ({
-            time: new Date(reading.created_at).toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            temperature: reading.temperature || 0,
-            humidity: reading.humidity || 0,
-          }))
+          .map((reading: any) => {
+            // O timestamp já vem no horário correto do servidor, apenas formatar
+            const date = new Date(reading.timestamp);
+            const hours = date.getUTCHours().toString().padStart(2, '0');
+            const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+            
+            return {
+              time: `${hours}:${minutes}`,
+              temperature: reading.temperature || 0,
+              humidity: reading.humidity || 0,
+            };
+          })
           .reverse(); // Mais antigo para mais recente
-
-        console.log("✅ [fetchTemperatureHistory] Histórico processado:", history.length, "pontos");
-        if (history.length > 0) {
-          console.log("📈 [fetchTemperatureHistory] Primeira leitura:", history[0]);
-          console.log("📈 [fetchTemperatureHistory] Última leitura:", history[history.length - 1]);
-        }
         
         set({ temperatureHistory: history });
-        console.log("✅ [fetchTemperatureHistory] Estado atualizado!");
       } else {
-        console.log("⚠️ [fetchTemperatureHistory] Nenhuma leitura encontrada");
         set({ temperatureHistory: [] });
       }
     } catch (error) {
-      console.error("❌ [fetchTemperatureHistory] ERRO:", error);
-      console.error("❌ [fetchTemperatureHistory] Stack:", error instanceof Error ? error.stack : "N/A");
+      console.error("Erro ao buscar histórico de temperatura:", error);
     }
-    
-    console.log("🏁 [fetchTemperatureHistory] CONCLUÍDO");
   },
 
   toggleAirConditioner: async (id: string) => {
@@ -315,7 +267,6 @@ export const useThermoGuardStore = create<ThermoGuardStore>((set, get) => ({
   recordIRSignal: async (id: string) => {
     try {
       await AirConditionersService.recordIR(id);
-      console.log("Sinal IR gravado com sucesso");
     } catch (error) {
       const apiError = handleAPIError(error);
       console.error("Erro ao gravar sinal IR:", error);
@@ -370,45 +321,36 @@ export const useThermoGuardStore = create<ThermoGuardStore>((set, get) => ({
       const envRoomId = process.env.NEXT_PUBLIC_DEFAULT_ROOM_ID;
       
       if (envRoomId) {
-        console.log("✅ Usando roomId do ambiente:", envRoomId);
         set({ roomId: envRoomId });
         get().fetchAirConditioners();
         get().fetchSensorData();
         get().fetchTemperatureHistory();
       } else {
         // Fallback: tenta buscar da API
-        console.log("⚠️ RoomId não definido no ambiente, tentando buscar da API...");
         getDefaultRoomId().then((roomId) => {
           if (roomId) {
-            console.log("✅ RoomId obtido da API:", roomId);
             set({ roomId });
             get().fetchAirConditioners();
             get().fetchSensorData();
             get().fetchTemperatureHistory();
           } else {
-            console.error("❌ Não foi possível obter roomId. Defina NEXT_PUBLIC_DEFAULT_ROOM_ID no .env.local");
+            console.error("Não foi possível obter roomId. Defina NEXT_PUBLIC_DEFAULT_ROOM_ID no .env.local");
           }
         }).catch((error) => {
-          console.error("❌ Erro ao buscar roomId da API:", error);
+          console.error("Erro ao buscar roomId da API:", error);
         });
       }
-    } else {
-      console.log("✅ RoomId já definido:", state.roomId);
     }
 
-    // POLLING DESABILITADO - Evitar rate limit
-    // TODO: Reativar quando rate limit for ajustado no backend
-    console.log("⏸️ Polling desabilitado temporariamente");
+    // Inicia polling de 1 minuto (60 segundos) - Sincronizado com leituras do sensor
+    const interval = setInterval(() => {
+      get().fetchSensorData();
+      get().fetchAirConditioners();
+      get().fetchTemperatureHistory();
+    }, 60000); // 60000ms = 1 minuto
     
-    // // Inicia polling de 5 minutos (300 segundos) - AUMENTADO para evitar rate limit
-    // const interval = setInterval(() => {
-    //   get().fetchSensorData();
-    //   get().fetchAirConditioners();
-    //   get().fetchTemperatureHistory();
-    // }, 300000); // 300000ms = 5 minutos
-    // 
-    // // Armazena o interval para poder limpar depois
-    // (get() as any).pollingInterval = interval;
+    // Armazena o interval para poder limpar depois
+    (get() as any).pollingInterval = interval;
   },
 
   stopPolling: () => {

@@ -30,7 +30,8 @@ export interface SensorReading {
   room_id: string;
   temperature: number;
   humidity: number;
-  created_at: string;
+  timestamp: string; // Campo principal usado pela API
+  created_at?: string; // Mantido para compatibilidade
 }
 
 export interface Sensor {

@@ -26,7 +26,7 @@ export const AirConditionerStatus = () => {
       {/* Units List */}
       <div className="space-y-3">
         {airConditioners.slice(0, 2).map((ac) => {
-          const info = unitNames[ac.id] || { name: ac.name, location: ac.id };
+          const info = unitNames[ac.id] || { name: ac.name, location: ac.room_name || "Unidade" };
 
           return (
             <button
